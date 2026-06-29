@@ -107,7 +107,7 @@ public class MusicPlayerGUI extends JFrame {
 
                 // update the current frame in the music player to this frame
                 musicPlayer.setCurrentFrame(frame);
-                
+
                 // check if a song is actually loaded to prevent NullPointerException
                 if (musicPlayer.getCurrentSong() == null) {
                     return;
