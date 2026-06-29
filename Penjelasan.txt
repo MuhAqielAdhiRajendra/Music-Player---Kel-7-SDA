@@ -1,44 +1,174 @@
-Penjelasan Struktur Data FIFO (Queue) dan LIFO (Stack) pada Music Player
+Penjelasan Struktur Data pada Music Player
+============================================
 
-1. Deque<Song> nextQueue (FIFO):
+==========================================================================
+A. Struktur Penyimpanan Data Katalog Musik yang Bersifat Hierarkis (Tree)
+==========================================================================
+
+1. MusicCatalogTree (N-ary Tree / Pohon Bertingkat):
+   - Kelas: MusicCatalogTree.java
+   - Struktur data yang digunakan: N-ary Tree (pohon dengan banyak anak per node)
+   - Setiap node direpresentasikan oleh inner class CatalogNode.
+   - Setiap CatalogNode menyimpan:
+     * name: nama tampilan (genre, artist, atau judul lagu)
+     * nodeType: tipe node (ROOT, GENRE, ARTIST, SONG)
+     * children: ArrayList<CatalogNode> -> daftar anak-anak node (membentuk N-ary tree)
+     * song: referensi ke objek Song (hanya untuk leaf node / daun bertipe SONG)
+
+   Hierarki Pohon (4 Tingkat):
+   ===========================
+   Root (Katalog Musik)
+   ├── Genre: Pop            (Tingkat 1 - Genre)
+   │   ├── Artist: Taylor Swift   (Tingkat 2 - Artist)
+   │   │   ├── Song: Love Story   (Tingkat 3 - Song / Leaf)
+   │   │   └── Song: Shake It Off (Tingkat 3 - Song / Leaf)
+   │   └── Artist: Ed Sheeran     (Tingkat 2 - Artist)
+   │       └── Song: Shape of You (Tingkat 3 - Song / Leaf)
+   ├── Genre: Rock           (Tingkat 1 - Genre)
+   │   └── Artist: Queen          (Tingkat 2 - Artist)
+   │       └── Song: Bohemian R.  (Tingkat 3 - Song / Leaf)
+   └── Genre: Unknown        (Tingkat 1 - Genre)
+       └── Artist: Unknown        (Tingkat 2 - Artist)
+           └── Song: mysong.mp3   (Tingkat 3 - Song / Leaf)
+
+   Operasi-Operasi pada Tree:
+   - addSong(Song): Menambahkan lagu ke pohon. Secara otomatis membuat node Genre 
+     dan Artist jika belum ada (berdasarkan metadata MP3).
+   - removeSong(filePath): Menghapus lagu berdasarkan file path. Juga membersihkan 
+     node Artist dan Genre yang kosong setelah penghapusan.
+   - getAllSongs(): Mengumpulkan semua lagu dengan traversal DFS (Depth-First Search).
+   - getSongsByGenre(genre): Mengambil lagu berdasarkan genre tertentu.
+   - getSongsByArtist(artist): Mengambil lagu berdasarkan artis tertentu.
+   - toJTreeModel(): Mengkonversi tree internal ke DefaultTreeModel untuk JTree Swing.
+
+   GUI Katalog (MusicCatalogDialog.java):
+   - Menampilkan katalog dalam komponen JTree (tampilan pohon visual).
+   - Tombol "Tambah Lagu": menambah lagu ke katalog via file chooser.
+   - Tombol "Hapus": menghapus lagu terpilih dari katalog.
+   - Tombol "Play": memutar lagu terpilih langsung.
+   - Tombol "Add to Queue": menambahkan lagu ke antrean putar (FIFO Queue).
+
+
+==========================================================================
+B. Fitur Antrean Putar (Next in Queue) - Prinsip FIFO (First In, First Out)
+==========================================================================
+
+2. Deque<Song> nextQueue (FIFO):
    - Digunakan untuk menyimpan daftar putar lagu selanjutnya.
    - Menggunakan implementasi LinkedList dari Java.
-   - Bersifat FIFO (First-In, First-Out), yang berarti lagu yang pertama kali dimasukkan ke antrean akan diputar pertama kali.
+   - Bersifat FIFO (First-In, First-Out), yang berarti lagu yang pertama kali 
+     dimasukkan ke antrean akan diputar pertama kali.
    - Saat playlist dimuat, semua lagu dimasukkan ke nextQueue menggunakan `add()`. 
-   - Lagu yang diputar diambil menggunakan fungsi `poll()` yang akan mengeluarkan lagu pertama di antrean.
-   - Jika pengguna menekan tombol "Previous", lagu yang sedang diputar (currentSong) dikembalikan ke bagian depan antrean menggunakan `addFirst()`, sehingga tidak kehilangan urutan aslinya.
+   - Lagu yang diputar diambil menggunakan fungsi `poll()` yang akan mengeluarkan 
+     lagu pertama di antrean.
+   - Jika pengguna menekan tombol "Previous", lagu yang sedang diputar (currentSong) 
+     dikembalikan ke bagian depan antrean menggunakan `addFirst()`, sehingga tidak 
+     kehilangan urutan aslinya.
 
-2. Stack<Song> historyStack (LIFO):
+   Operasi FIFO pada Queue:
+   - add(song): Menambahkan lagu ke akhir (tail) antrean. -> Enqueue
+   - poll(): Mengambil dan menghapus lagu dari awal (head) antrean. -> Dequeue
+   - addFirst(song): Mengembalikan lagu ke awal antrean (untuk Previous/Undo).
+   - addToQueue(song): Method baru untuk menambahkan lagu ke antrean dari katalog.
+   - removeFromQueue(index): Method baru untuk menghapus lagu dari antrean.
+   - getNextQueue(): Getter untuk menampilkan isi antrean di GUI.
+
+   GUI Antrean Putar (View Queue Dialog):
+   - Diakses melalui menu Catalog > View Queue (FIFO).
+   - Menampilkan daftar lagu dalam antrean sesuai urutan FIFO.
+   - Tombol "Hapus dari Antrean": menghapus lagu terpilih dari antrean.
+
+
+==========================================================================
+C. Fitur Riwayat Putar (History) dan Pembatalan (Undo/Back) - Prinsip LIFO
+==========================================================================
+
+3. Stack<Song> historyStack (LIFO):
    - Digunakan untuk menyimpan riwayat lagu yang telah diputar sebelumnya.
    - Menggunakan implementasi Stack dari Java.
-   - Bersifat LIFO (Last-In, First-Out), yang berarti lagu yang paling terakhir didengarkan akan berada di tumpukan paling atas.
-   - Ketika pengguna menekan tombol "Next" atau lagu selesai dan lanjut ke lagu berikutnya, lagu yang saat itu diputar (currentSong) dimasukkan (di-push) ke dalam `historyStack`.
-   - Ketika pengguna menekan tombol "Previous", lagu akan diambil dari tumpukan paling atas menggunakan `pop()` dan diputar kembali sebagai `currentSong`.
+   - Bersifat LIFO (Last-In, First-Out), yang berarti lagu yang paling terakhir 
+     didengarkan akan berada di tumpukan paling atas.
+   - Ketika pengguna menekan tombol "Next" atau lagu selesai dan lanjut ke lagu 
+     berikutnya, lagu yang saat itu diputar (currentSong) dimasukkan (di-push) 
+     ke dalam `historyStack`.
+   - Ketika pengguna menekan tombol "Previous" (Undo/Back), lagu akan diambil 
+     dari tumpukan paling atas menggunakan `pop()` dan diputar kembali sebagai 
+     `currentSong`. Ini adalah operasi UNDO/BACK.
 
-Fungsi-Fungsi yang Diubah (Terkait Antrean & Riwayat):
+   Operasi LIFO pada Stack:
+   - push(song): Memasukkan lagu ke puncak stack saat berpindah ke lagu baru.
+   - pop(): Mengambil lagu dari puncak stack untuk Undo/Back ke lagu sebelumnya.
+   - getHistoryStack(): Getter untuk menampilkan isi riwayat di GUI.
+
+   GUI Riwayat Putar (View History Dialog):
+   - Diakses melalui menu Catalog > View History (LIFO).
+   - Menampilkan daftar riwayat lagu dari yang terakhir diputar (puncak stack) 
+     ke yang pertama (dasar stack).
+   - Tombol "Undo/Back (Previous)": melakukan operasi pop() pada stack untuk 
+     kembali ke lagu sebelumnya. Ini mengimplementasikan fitur pembatalan (Undo).
+
+
+==========================================================================
+D. Fungsi-Fungsi Utama yang Berkaitan dengan Struktur Data
+==========================================================================
+
+Fungsi-Fungsi pada MusicPlayer.java:
 - loadPlaylist(): 
-  Menginisialisasi `nextQueue` dan `historyStack`. Membaca daftar lagu dari file teks, lalu menyimpannya ke `nextQueue`. Mengambil lagu pertama dari `nextQueue` menggunakan `poll()` untuk diputar.
+  Menginisialisasi `nextQueue` dan `historyStack`. Membaca daftar lagu dari file 
+  teks, lalu menyimpannya ke `nextQueue`. Mengambil lagu pertama dari `nextQueue` 
+  menggunakan `poll()` untuk diputar.
 
 - nextSong(): 
-  Mengecek apakah `nextQueue` kosong. Jika tidak, lagu saat ini (`currentSong`) dimasukkan ke dalam `historyStack` dengan `push()`. Lagu baru diambil dari `nextQueue` dengan `poll()`.
+  Mengecek apakah `nextQueue` kosong. Jika tidak, lagu saat ini (`currentSong`) 
+  dimasukkan ke dalam `historyStack` dengan `push()`. Lagu baru diambil dari 
+  `nextQueue` dengan `poll()`.
 
-- prevSong(): 
-  Mengecek apakah `historyStack` kosong. Jika tidak, lagu saat ini (`currentSong`) dikembalikan ke awal `nextQueue` menggunakan `addFirst()`. Lagu sebelumnya ditarik dari `historyStack` menggunakan `pop()` untuk diputar.
+- prevSong() / Undo/Back: 
+  Mengecek apakah `historyStack` kosong. Jika tidak, lagu saat ini (`currentSong`) 
+  dikembalikan ke awal `nextQueue` menggunakan `addFirst()`. Lagu sebelumnya 
+  ditarik dari `historyStack` menggunakan `pop()` untuk diputar. Ini adalah 
+  implementasi dari fitur Undo/Back menggunakan prinsip LIFO.
+
+- addToQueue(Song): 
+  Menambahkan lagu ke akhir antrean putar menggunakan `add()` (FIFO enqueue).
 
 - playbackFinished(): 
-  Saat satu lagu selesai secara otomatis, program mengecek `nextQueue`. Jika kosong, pemutaran berhenti dan tombol play diaktifkan. Jika tidak, akan otomatis memanggil `nextSong()` untuk melanjutkan lagu berikutnya.
+  Saat satu lagu selesai secara otomatis, program mengecek `nextQueue`. Jika 
+  kosong, pemutaran berhenti dan tombol play diaktifkan. Jika tidak, akan 
+  otomatis memanggil `nextSong()` untuk melanjutkan lagu berikutnya.
+
+Fungsi-Fungsi pada MusicCatalogTree.java:
+- addSong(Song): Menambahkan lagu ke pohon hierarkis (auto-create Genre/Artist node).
+- removeSong(filePath): Menghapus lagu dan membersihkan node kosong.
+- getAllSongs(): Traversal DFS untuk mengumpulkan semua lagu.
+- toJTreeModel(): Konversi ke model JTree untuk tampilan GUI.
 
 
 ===========================================================================
-Pembaruan Tambahan (Update Terbaru)
+E. Pembaruan Tambahan (Update Terbaru)
 ===========================================================================
 
-3. Pembaruan Label Waktu (Dynamic Elapsed Time):
+4. Pembaruan Label Waktu (Dynamic Elapsed Time):
    - Mengatasi masalah teks waktu di sebelah kiri slider yang statis ("00:00").
    - File yang Diubah: MusicPlayerGUI.java
-   - Cara Kerja: Menjadikan label waktu sebelah kiri sebagai referensi dinamis (`timeElapsedLabel`). Saat lagu berjalan (pada method `setPlaybackSliderValue`), aplikasi akan mengambil `frame` lagu saat ini, membaginya dengan total durasi frame rate per detik, lalu mengkonversikannya dari milidetik menjadi hitungan `Menit:Detik`. Angka tersebut lalu di-update ke layar terus-menerus.
+   - Cara Kerja: Menjadikan label waktu sebelah kiri sebagai referensi dinamis 
+     (`timeElapsedLabel`). Saat lagu berjalan (pada method `setPlaybackSliderValue`), 
+     aplikasi akan mengambil `frame` lagu saat ini, membaginya dengan total durasi 
+     frame rate per detik, lalu mengkonversikannya dari milidetik menjadi hitungan 
+     `Menit:Detik`. Angka tersebut lalu di-update ke layar terus-menerus.
 
-4. Konsistensi Warna GUI pada Semua Tema OS (Dark Mode / Light Mode):
-   - Mengatasi masalah di mana warna menu, toolbar, atau tombol menjadi rusak saat OS Windows berganti ke Mode Gelap atau Terang.
+5. Konsistensi Warna GUI pada Semua Tema OS (Dark Mode / Light Mode):
+   - Mengatasi masalah di mana warna menu, toolbar, atau tombol menjadi rusak 
+     saat OS Windows berganti ke Mode Gelap atau Terang.
    - File yang Diubah: App.java
-   - Cara Kerja: Ditambahkan instruksi `UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());` pada saat aplikasi pertama kali dimuat. Perintah ini menginstruksikan aplikasi Java untuk mengunci temanya ke sistem standar bawaan (bernama tema "Metal") sehingga tampilan visualnya akan selalu sama persis dan tidak terpengaruh oleh tema sistem operasi apa pun.
+   - Cara Kerja: Ditambahkan instruksi 
+     `UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());` 
+     pada saat aplikasi pertama kali dimuat. Perintah ini menginstruksikan aplikasi 
+     Java untuk mengunci temanya ke sistem standar bawaan (bernama tema "Metal") 
+     sehingga tampilan visualnya akan selalu sama persis dan tidak terpengaruh oleh 
+     tema sistem operasi apa pun.
+
+6. Penambahan Field Genre pada Song.java:
+   - Menambahkan pembacaan metadata Genre dari file MP3 menggunakan FieldKey.GENRE.
+   - Genre digunakan oleh MusicCatalogTree untuk mengorganisir lagu secara hierarkis.
+   - Jika metadata Genre kosong atau tidak tersedia, otomatis diisi "Unknown".

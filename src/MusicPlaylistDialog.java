@@ -10,7 +10,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class MusicPlaylistDialog extends JDialog {
     private MusicPlayerGUI musicPlayerGUI;
-    
+
     // Store all of the paths to be written to a txt file (when we load a playlist)
     private ArrayList<String> songPaths;
 
@@ -34,7 +34,7 @@ public class MusicPlaylistDialog extends JDialog {
         // Container to hold all of the added songs
         JPanel songContainer = new JPanel();
         songContainer.setLayout(new BoxLayout(songContainer, BoxLayout.Y_AXIS));
-        songContainer.setBounds((int)(getWidth() * 0.025), 10, (int) (getWidth() * 0.90), (int)(getHeight() * 0.75));
+        songContainer.setBounds((int) (getWidth() * 0.025), 10, (int) (getWidth() * 0.90), (int) (getHeight() * 0.75));
         songContainer.setBackground(MusicPlayerGUI.FRAME_COLOR); // match frame color
         add(songContainer);
 
@@ -51,19 +51,19 @@ public class MusicPlaylistDialog extends JDialog {
                 jFileChooser.setCurrentDirectory(new File("src/assets"));
                 int result = jFileChooser.showOpenDialog(MusicPlaylistDialog.this);
                 File selectedFile = jFileChooser.getSelectedFile();
-                
+
                 if (result == JFileChooser.APPROVE_OPTION && selectedFile != null) {
                     // Create label displaying the file name
                     JLabel filePathLabel = new JLabel(selectedFile.getName());
                     filePathLabel.setFont(new Font("Dialog", Font.BOLD, 12));
                     filePathLabel.setForeground(MusicPlayerGUI.TEXT_COLOR);
-                    
+
                     // add to the list of paths
                     songPaths.add(selectedFile.getPath());
-                    
+
                     // add label to container to show the user
                     songContainer.add(filePathLabel);
-                    
+
                     // refreshes dialog to show newly added JLabel
                     songContainer.revalidate();
                     songContainer.repaint();
@@ -84,29 +84,29 @@ public class MusicPlaylistDialog extends JDialog {
                     JOptionPane.showMessageDialog(MusicPlaylistDialog.this, "Playlist cannot be empty!");
                     return;
                 }
-                
+
                 try {
                     JFileChooser jFileChooser = new JFileChooser();
                     jFileChooser.setCurrentDirectory(new File("src/assets"));
                     int result = jFileChooser.showSaveDialog(MusicPlaylistDialog.this);
-                    
+
                     if (result == JFileChooser.APPROVE_OPTION) {
                         File selectedFile = jFileChooser.getSelectedFile();
-                        
+
                         // Append .txt if not present
                         if (!selectedFile.getName().toLowerCase().endsWith(".txt")) {
                             selectedFile = new File(selectedFile.getAbsolutePath() + ".txt");
                         }
-                        
+
                         // Write song paths to file
                         BufferedWriter writer = new BufferedWriter(new FileWriter(selectedFile));
                         for (String path : songPaths) {
                             writer.write(path + "\n");
                         }
                         writer.close();
-                        
+
                         JOptionPane.showMessageDialog(MusicPlaylistDialog.this, "Successfully Created Playlist!");
-                        
+
                         // Close dialog
                         dispose();
                     }

@@ -9,6 +9,7 @@ import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.Hashtable;
+import java.util.List;
 
 public class MusicPlayerGUI extends JFrame {
     // color configurations
@@ -16,6 +17,9 @@ public class MusicPlayerGUI extends JFrame {
     public static final Color TEXT_COLOR = Color.WHITE;
 
     private MusicPlayer musicPlayer;
+
+    // Katalog musik hierarkis (Tree) - digunakan oleh seluruh aplikasi
+    private MusicCatalogTree musicCatalogTree;
 
     // allow us to use file explorer in our app
     private JFileChooser jFileChooser;
@@ -51,6 +55,7 @@ public class MusicPlayerGUI extends JFrame {
         getContentPane().setBackground(FRAME_COLOR);
 
         musicPlayer = new MusicPlayer(this);
+        musicCatalogTree = new MusicCatalogTree();
         jFileChooser = new JFileChooser();
 
         // set a default path for file explorer
@@ -212,6 +217,40 @@ public class MusicPlayerGUI extends JFrame {
         });
         playListMenu.add(loadPlaylist);
 
+        // === Menu Katalog ===
+        JMenu catalogMenu = new JMenu("Catalog");
+        menuBar.add(catalogMenu);
+
+        // Item: Buka Katalog Musik (Hierarchical Tree)
+        JMenuItem openCatalog = new JMenuItem("Music Catalog (Tree)");
+        openCatalog.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new MusicCatalogDialog(MusicPlayerGUI.this, musicCatalogTree, musicPlayer).setVisible(true);
+            }
+        });
+        catalogMenu.add(openCatalog);
+
+        // Item: Lihat Antrean Putar (FIFO Queue)
+        JMenuItem viewQueue = new JMenuItem("View Queue (FIFO)");
+        viewQueue.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showQueueDialog();
+            }
+        });
+        catalogMenu.add(viewQueue);
+
+        // Item: Lihat Riwayat Putar (LIFO History)
+        JMenuItem viewHistory = new JMenuItem("View History (LIFO)");
+        viewHistory.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                showHistoryDialog();
+            }
+        });
+        catalogMenu.add(viewHistory);
+
         add(toolBar);
     }
 
@@ -286,7 +325,8 @@ public class MusicPlayerGUI extends JFrame {
     public void setPlaybackSliderValue(int frame) {
         playbackSlider.setValue(frame);
         if (timeElapsedLabel != null && musicPlayer.getCurrentSong() != null) {
-            int currentTimeInMilli = (int) (frame / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds()));
+            int currentTimeInMilli = (int) (frame
+                    / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds()));
             long minutes = (currentTimeInMilli / 1000) / 60;
             long seconds = (currentTimeInMilli / 1000) % 60;
             String formattedTime = String.format("%02d:%02d", minutes, seconds);
@@ -381,5 +421,164 @@ public class MusicPlayerGUI extends JFrame {
             path = "/" + path;
         }
         return path;
+    }
+
+    /**
+     * Menampilkan dialog Antrean Putar (FIFO Queue).
+     * Lagu ditampilkan dalam urutan FIFO: lagu pertama di list akan diputar
+     * pertama.
+     * Pengguna bisa menghapus lagu dari antrean.
+     */
+    private void showQueueDialog() {
+        JDialog dialog = new JDialog(this, "Antrean Putar - Next in Queue (FIFO)", true);
+        dialog.setSize(400, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.getContentPane().setBackground(FRAME_COLOR);
+        dialog.setLayout(new BorderLayout());
+
+        // Header
+        JLabel header = new JLabel("Antrean Putar (FIFO - First In, First Out)");
+        header.setFont(new Font("Dialog", Font.BOLD, 14));
+        header.setForeground(TEXT_COLOR);
+        header.setHorizontalAlignment(SwingConstants.CENTER);
+        header.setOpaque(true);
+        header.setBackground(FRAME_COLOR);
+        header.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
+        dialog.add(header, BorderLayout.NORTH);
+
+        // List model
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        List<Song> queue = musicPlayer.getNextQueue();
+        for (int i = 0; i < queue.size(); i++) {
+            Song s = queue.get(i);
+            listModel.addElement((i + 1) + ". " + s.getSongTitle() + " - " + s.getSongArtist());
+        }
+        if (queue.isEmpty()) {
+            listModel.addElement("(Antrean kosong)");
+        }
+
+        JList<String> jList = new JList<>(listModel);
+        jList.setBackground(Color.DARK_GRAY);
+        jList.setForeground(TEXT_COLOR);
+        jList.setFont(new Font("Dialog", Font.PLAIN, 14));
+        JScrollPane scrollPane = new JScrollPane(jList);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        // Button panel
+        JPanel btnPanel = new JPanel();
+        btnPanel.setBackground(FRAME_COLOR);
+        JButton removeBtn = new JButton("Hapus dari Antrean");
+        removeBtn.setFont(new Font("Dialog", Font.BOLD, 12));
+        removeBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int index = jList.getSelectedIndex();
+                if (index >= 0 && !musicPlayer.getNextQueue().isEmpty()) {
+                    musicPlayer.removeFromQueue(index);
+                    // Refresh list
+                    listModel.clear();
+                    List<Song> updatedQueue = musicPlayer.getNextQueue();
+                    for (int i = 0; i < updatedQueue.size(); i++) {
+                        Song s = updatedQueue.get(i);
+                        listModel.addElement((i + 1) + ". " + s.getSongTitle() + " - " + s.getSongArtist());
+                    }
+                    if (updatedQueue.isEmpty()) {
+                        listModel.addElement("(Antrean kosong)");
+                    }
+                }
+            }
+        });
+        btnPanel.add(removeBtn);
+
+        JButton closeBtn = new JButton("Tutup");
+        closeBtn.setFont(new Font("Dialog", Font.BOLD, 12));
+        closeBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialog.dispose();
+            }
+        });
+        btnPanel.add(closeBtn);
+        dialog.add(btnPanel, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
+    }
+
+    /**
+     * Menampilkan dialog Riwayat Putar (LIFO Stack / History).
+     * Lagu ditampilkan dari yang terakhir diputar (atas stack) ke yang pertama.
+     * Tombol "Undo/Back" memungkinkan pengguna kembali ke lagu sebelumnya (LIFO
+     * pop).
+     */
+    private void showHistoryDialog() {
+        JDialog dialog = new JDialog(this, "Riwayat Putar - History (LIFO)", true);
+        dialog.setSize(400, 400);
+        dialog.setLocationRelativeTo(this);
+        dialog.getContentPane().setBackground(FRAME_COLOR);
+        dialog.setLayout(new BorderLayout());
+
+        // Header
+        JLabel header = new JLabel("Riwayat Putar (LIFO - Last In, First Out)");
+        header.setFont(new Font("Dialog", Font.BOLD, 14));
+        header.setForeground(TEXT_COLOR);
+        header.setHorizontalAlignment(SwingConstants.CENTER);
+        header.setOpaque(true);
+        header.setBackground(FRAME_COLOR);
+        header.setBorder(BorderFactory.createEmptyBorder(10, 10, 5, 10));
+        dialog.add(header, BorderLayout.NORTH);
+
+        // List model — tampilkan dari atas stack (terakhir diputar) ke bawah
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        List<Song> history = musicPlayer.getHistoryStack();
+        if (history.isEmpty()) {
+            listModel.addElement("(Belum ada riwayat)");
+        } else {
+            // Tampilkan dari terakhir (top of stack) ke pertama
+            for (int i = history.size() - 1; i >= 0; i--) {
+                Song s = history.get(i);
+                listModel.addElement((history.size() - i) + ". " + s.getSongTitle() + " - " + s.getSongArtist());
+            }
+        }
+
+        JList<String> jList = new JList<>(listModel);
+        jList.setBackground(Color.DARK_GRAY);
+        jList.setForeground(TEXT_COLOR);
+        jList.setFont(new Font("Dialog", Font.PLAIN, 14));
+        JScrollPane scrollPane = new JScrollPane(jList);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
+        dialog.add(scrollPane, BorderLayout.CENTER);
+
+        // Button panel
+        JPanel btnPanel = new JPanel();
+        btnPanel.setBackground(FRAME_COLOR);
+
+        JButton undoBtn = new JButton("Undo/Back (Previous)");
+        undoBtn.setFont(new Font("Dialog", Font.BOLD, 12));
+        undoBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (!musicPlayer.getHistoryStack().isEmpty()) {
+                    musicPlayer.prevSong();
+                    dialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(dialog, "Tidak ada lagu di riwayat untuk di-undo!");
+                }
+            }
+        });
+        btnPanel.add(undoBtn);
+
+        JButton closeBtn = new JButton("Tutup");
+        closeBtn.setFont(new Font("Dialog", Font.BOLD, 12));
+        closeBtn.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                dialog.dispose();
+            }
+        });
+        btnPanel.add(closeBtn);
+        dialog.add(btnPanel, BorderLayout.SOUTH);
+
+        dialog.setVisible(true);
     }
 }
