@@ -121,7 +121,7 @@ public class MusicPlayerGUI extends JFrame {
 
                 // update current time in milli as well
                 musicPlayer.setCurrentTimeInMilli(
-                        (int) (frame / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds())));
+                        (int) (frame / musicPlayer.getCurrentSong().getFrameRatePerMilliseconds()));
 
                 // resume the song
                 musicPlayer.playCurrentSong();
@@ -337,7 +337,7 @@ public class MusicPlayerGUI extends JFrame {
         playbackSlider.setValue(frame);
         if (timeElapsedLabel != null && musicPlayer.getCurrentSong() != null) {
             int currentTimeInMilli = (int) (frame
-                    / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds()));
+                    / musicPlayer.getCurrentSong().getFrameRatePerMilliseconds());
             long minutes = (currentTimeInMilli / 1000) / 60;
             long seconds = (currentTimeInMilli / 1000) % 60;
             String formattedTime = String.format("%02d:%02d", minutes, seconds);

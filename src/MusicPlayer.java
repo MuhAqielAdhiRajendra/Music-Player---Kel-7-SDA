@@ -232,13 +232,19 @@ public class MusicPlayer extends PlaybackListener {
                     }
                 }
 
+                long startTime = System.currentTimeMillis();
+                long initialTimeInMilli = currentTimeInMilli;
+
                 while (!isPaused && !songFinished && !pressedNext && !pressedPrev) {
                     try {
-                        currentTimeInMilli++;
-                        int calculatedFrame = (int) ((double) currentTimeInMilli * 2.08
+                        long elapsed = System.currentTimeMillis() - startTime;
+                        currentTimeInMilli = (int) (initialTimeInMilli + elapsed);
+                        
+                        int calculatedFrame = (int) ((double) currentTimeInMilli 
                                 * currentSong.getFrameRatePerMilliseconds());
                         musicPlayerGUI.setPlaybackSliderValue(calculatedFrame);
-                        Thread.sleep(1);
+                        
+                        Thread.sleep(10); // Update UI smoothly every 10ms
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
