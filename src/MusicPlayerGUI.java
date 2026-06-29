@@ -168,6 +168,9 @@ public class MusicPlayerGUI extends JFrame {
                     // load song in music player
                     musicPlayer.loadSong(song);
 
+                    // tambahkan ke tree catalog agar menu catalog terupdate
+                    musicCatalogTree.addSong(song);
+
                     // update song title and artist
                     updateSongTitleAndArtist(song);
 
@@ -212,6 +215,14 @@ public class MusicPlayerGUI extends JFrame {
 
                     // load playlist
                     musicPlayer.loadPlaylist(selectedFile);
+
+                    // tambahkan lagu-lagu dari playlist ke catalog tree
+                    if (musicPlayer.getCurrentSong() != null) {
+                        musicCatalogTree.addSong(musicPlayer.getCurrentSong());
+                    }
+                    for (Song s : musicPlayer.getNextQueue()) {
+                        musicCatalogTree.addSong(s);
+                    }
                 }
             }
         });
@@ -558,11 +569,11 @@ public class MusicPlayerGUI extends JFrame {
         undoBtn.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (!musicPlayer.getHistoryStack().isEmpty()) {
+                if (musicPlayer.getHistoryStack().size() > 1) {
                     musicPlayer.prevSong();
                     dialog.dispose();
                 } else {
-                    JOptionPane.showMessageDialog(dialog, "Tidak ada lagu di riwayat untuk di-undo!");
+                    JOptionPane.showMessageDialog(dialog, "Tidak ada lagu sebelumnya di riwayat untuk di-undo!");
                 }
             }
         });

@@ -43,6 +43,7 @@ public class MusicPlayer extends PlaybackListener {
         currentSong = song;
         // Tidak mereset nextQueue dan historyStack agar data antrean dan riwayat tetap
         // ada
+        historyStack.push(song);
 
         if (!songFinished)
             stopSong();
@@ -76,6 +77,7 @@ public class MusicPlayer extends PlaybackListener {
             musicPlayerGUI.setPlaybackSliderValue(0);
             currentTimeInMilli = 0;
             currentSong = nextQueue.poll();
+            historyStack.push(currentSong);
             currentFrame = 0;
             musicPlayerGUI.enablePauseButtonDisablePlayButton();
             musicPlayerGUI.updateSongTitleAndArtist(currentSong);
@@ -145,10 +147,8 @@ public class MusicPlayer extends PlaybackListener {
         if (!songFinished)
             stopSong();
 
-        if (currentSong != null) {
-            historyStack.push(currentSong);
-        }
         currentSong = nextQueue.poll();
+        historyStack.push(currentSong);
         currentFrame = 0;
         currentTimeInMilli = 0;
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
@@ -159,21 +159,21 @@ public class MusicPlayer extends PlaybackListener {
 
     /**
      * Kembali ke lagu sebelumnya (Undo/Back).
-     * Menggunakan prinsip LIFO: lagu terakhir yang dimasukkan ke historyStack
-     * akan menjadi lagu yang diputar kembali (pop dari stack).
+     * Menggunakan prinsip LIFO: pop lagu saat ini, lalu kembalikan ke antrean, 
+     * dan peek lagu sebelumnya dari historyStack.
      */
     public void prevSong() {
-        if (historyStack.isEmpty())
+        if (historyStack.size() <= 1)
             return;
         pressedPrev = true;
 
         if (!songFinished)
             stopSong();
 
-        if (currentSong != null) {
-            nextQueue.addFirst(currentSong);
-        }
-        currentSong = historyStack.pop();
+        Song poppedSong = historyStack.pop();
+        nextQueue.addFirst(poppedSong);
+        
+        currentSong = historyStack.peek();
         currentFrame = 0;
         currentTimeInMilli = 0;
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
