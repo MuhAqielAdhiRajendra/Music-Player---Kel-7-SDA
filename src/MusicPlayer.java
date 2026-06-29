@@ -89,6 +89,9 @@ public class MusicPlayer extends PlaybackListener {
     public void pauseSong() {
         if (advancedPlayer != null) {
             isPaused = true;
+            if (currentSong != null) {
+                currentFrame = (int) (currentTimeInMilli * currentSong.getFrameRatePerMilliseconds());
+            }
             stopSong();
         }
     }
@@ -154,6 +157,7 @@ public class MusicPlayer extends PlaybackListener {
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
         musicPlayerGUI.updateSongTitleAndArtist(currentSong);
         musicPlayerGUI.updatePlaybackSlider(currentSong);
+        musicPlayerGUI.setPlaybackSliderValue(0);
         playCurrentSong();
     }
 
@@ -179,6 +183,7 @@ public class MusicPlayer extends PlaybackListener {
         musicPlayerGUI.enablePauseButtonDisablePlayButton();
         musicPlayerGUI.updateSongTitleAndArtist(currentSong);
         musicPlayerGUI.updatePlaybackSlider(currentSong);
+        musicPlayerGUI.setPlaybackSliderValue(0);
         playCurrentSong();
     }
 
@@ -190,6 +195,13 @@ public class MusicPlayer extends PlaybackListener {
             BufferedInputStream bufferedInputStream = new BufferedInputStream(fileInputStream);
             advancedPlayer = new AdvancedPlayer(bufferedInputStream);
             advancedPlayer.setPlayBackListener(this);
+            
+            // Reset all state flags before starting threads to prevent the slider thread from instantly exiting
+            isPaused = false;
+            songFinished = false;
+            pressedNext = false;
+            pressedPrev = false;
+            
             startMusicThread();
             startPlaybackSliderThread();
         } catch (Exception e) {
@@ -202,15 +214,7 @@ public class MusicPlayer extends PlaybackListener {
             @Override
             public void run() {
                 try {
-                    if (isPaused) {
-                        synchronized (playSignal) {
-                            isPaused = false;
-                            playSignal.notify();
-                        }
-                        advancedPlayer.play(currentFrame, Integer.MAX_VALUE);
-                    } else {
-                        advancedPlayer.play();
-                    }
+                    advancedPlayer.play(currentFrame, Integer.MAX_VALUE);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -222,16 +226,6 @@ public class MusicPlayer extends PlaybackListener {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                if (isPaused) {
-                    try {
-                        synchronized (playSignal) {
-                            playSignal.wait();
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-
                 long startTime = System.currentTimeMillis();
                 long initialTimeInMilli = currentTimeInMilli;
 
@@ -265,7 +259,7 @@ public class MusicPlayer extends PlaybackListener {
     public void playbackFinished(PlaybackEvent evt) {
         System.out.println("Playback Finished");
         if (isPaused) {
-            currentFrame += (int) ((double) evt.getFrame() * currentSong.getFrameRatePerMilliseconds());
+            // currentFrame is already updated in pauseSong()
         } else {
             if (pressedNext || pressedPrev)
                 return;
