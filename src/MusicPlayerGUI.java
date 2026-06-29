@@ -23,6 +23,7 @@ public class MusicPlayerGUI extends JFrame {
     private JLabel songTitle, songArtist;
     private JPanel playbackBtns;
     private JSlider playbackSlider;
+    private JLabel timeElapsedLabel;
 
     public MusicPlayerGUI() {
         // calls JFrame constructor to configure gui and set title header to
@@ -284,6 +285,14 @@ public class MusicPlayerGUI extends JFrame {
     // this will be used to update our slider from the music player class
     public void setPlaybackSliderValue(int frame) {
         playbackSlider.setValue(frame);
+        if (timeElapsedLabel != null && musicPlayer.getCurrentSong() != null) {
+            int currentTimeInMilli = (int) (frame / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds()));
+            long minutes = (currentTimeInMilli / 1000) / 60;
+            long seconds = (currentTimeInMilli / 1000) % 60;
+            String formattedTime = String.format("%02d:%02d", minutes, seconds);
+            timeElapsedLabel.setText(formattedTime);
+            playbackSlider.repaint();
+        }
     }
 
     public void updateSongTitleAndArtist(Song song) {
@@ -299,16 +308,16 @@ public class MusicPlayerGUI extends JFrame {
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
 
         // beginning will be 00:00
-        JLabel labelBeginning = new JLabel("00:00");
-        labelBeginning.setFont(new Font("Dialog", Font.BOLD, 18));
-        labelBeginning.setForeground(TEXT_COLOR);
+        timeElapsedLabel = new JLabel("00:00");
+        timeElapsedLabel.setFont(new Font("Dialog", Font.BOLD, 18));
+        timeElapsedLabel.setForeground(TEXT_COLOR);
 
         // end will vary depending on the song
         JLabel labelEnd = new JLabel(song.getSongLength());
         labelEnd.setFont(new Font("Dialog", Font.BOLD, 18));
         labelEnd.setForeground(TEXT_COLOR);
 
-        labelTable.put(0, labelBeginning);
+        labelTable.put(0, timeElapsedLabel);
         labelTable.put(song.getMp3File().getFrameCount(), labelEnd);
 
         playbackSlider.setLabelTable(labelTable);
