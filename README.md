@@ -1,11 +1,25 @@
+===========================================================
+LEMBAR PENILAIAN KONTRIBUSI ANGGOTA KELOMPOK
+===========================================================
+Tema Proyek  : A3 Music Player
+Kelompok     : Kelompok 7
+
+1. Nama Anggota 1 : [Akmal Mustofa W]
+   NIM            : [L0125094]
+   Kontribusi     : [set UP library dan Pembuatan UI]
+
+2. Nama Anggota 2 : [Ayu atika azhar]
+   NIM            : [L0125127]
+   Kontribusi     : [Pembuatan UI dan function untuk music]
+
+3. Nama Anggota 3 : [Muh Aqiel Adhi R]
+   NIM            : [L0125107]
+   Kontribusi     : [Finnishing, pembenaran bug]
+===========================================================
+
 # MP3 Music Player - Kelompok 7 SDA
 
 Aplikasi **MP3 Music Player** ini dibuat menggunakan Java (GUI dengan Java Swing) yang memungkinkan pengguna untuk memutar lagu-lagu berformat MP3, membuat *playlist*, dan mengontrol *playback* (Play, Pause, Next, Previous).
-
-## Anggota Kelompok 7
-1. [Akmal Mustofa W] - [L0125094]
-2. [Ayu atika azhar] - [L0125127]
-3. [Muh Aqiel Adhi R] - [L0125107]
 
 ---
 
