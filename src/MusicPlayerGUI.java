@@ -14,7 +14,7 @@ public class MusicPlayerGUI extends JFrame {
     // color configurations
     public static final Color FRAME_COLOR = Color.BLACK;
     public static final Color TEXT_COLOR = Color.WHITE;
-    
+
     private MusicPlayer musicPlayer;
 
     // allow us to use file explorer in our app
@@ -25,7 +25,8 @@ public class MusicPlayerGUI extends JFrame {
     private JSlider playbackSlider;
 
     public MusicPlayerGUI() {
-        // calls JFrame constructor to configure gui and set title header to "MusicPlayer"
+        // calls JFrame constructor to configure gui and set title header to
+        // "MusicPlayer"
         super("MP3 Music Player");
 
         // set width and height
@@ -40,7 +41,8 @@ public class MusicPlayerGUI extends JFrame {
         // Prevent resizing
         setResizable(false);
 
-        // set layout to null which allows us to control the (x,y) coordinates of our components
+        // set layout to null which allows us to control the (x,y) coordinates of our
+        // components
         // and also set height and width
         setLayout(null);
 
@@ -105,9 +107,15 @@ public class MusicPlayerGUI extends JFrame {
 
                 // update the current frame in the music player to this frame
                 musicPlayer.setCurrentFrame(frame);
+                
+                // check if a song is actually loaded to prevent NullPointerException
+                if (musicPlayer.getCurrentSong() == null) {
+                    return;
+                }
 
                 // update current time in milli as well
-                musicPlayer.setCurrentTimeInMilli((int) (frame / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds())));
+                musicPlayer.setCurrentTimeInMilli(
+                        (int) (frame / (2.08 * musicPlayer.getCurrentSong().getFrameRatePerMilliseconds())));
 
                 // resume the song
                 musicPlayer.playCurrentSong();
@@ -147,7 +155,7 @@ public class MusicPlayerGUI extends JFrame {
                 File selectedFile = jFileChooser.getSelectedFile();
 
                 // Verify that a file was selected successfully.
-                if(result == JFileChooser.APPROVE_OPTION && selectedFile != null){
+                if (result == JFileChooser.APPROVE_OPTION && selectedFile != null) {
                     // create a song obj based on selected file
                     Song song = new Song(selectedFile.getPath());
 
@@ -175,10 +183,7 @@ public class MusicPlayerGUI extends JFrame {
         createPlaylist.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                JOptionPane.showMessageDialog(
-                MusicPlayerGUI.this,
-                "Fitur Create Playlist sedang dikerjakan."
-                );
+                new MusicPlaylistDialog(MusicPlayerGUI.this).setVisible(true);
             }
         });
         playListMenu.add(createPlaylist);
@@ -195,7 +200,7 @@ public class MusicPlayerGUI extends JFrame {
                 int result = jFileChooser.showOpenDialog(MusicPlayerGUI.this);
                 File selectedFile = jFileChooser.getSelectedFile();
 
-                if(result == JFileChooser.APPROVE_OPTION && selectedFile != null){
+                if (result == JFileChooser.APPROVE_OPTION && selectedFile != null) {
                     // stop the music
                     musicPlayer.stopSong();
 
@@ -209,7 +214,7 @@ public class MusicPlayerGUI extends JFrame {
         add(toolBar);
     }
 
-    private void addPlaybackBtns(){
+    private void addPlaybackBtns() {
         playbackBtns = new JPanel();
         playbackBtns.setBounds(0, 435, getWidth() - 10, 80);
         playbackBtns.setBackground(null);
@@ -277,16 +282,16 @@ public class MusicPlayerGUI extends JFrame {
     }
 
     // this will be used to update our slider from the music player class
-    public void setPlaybackSliderValue(int frame){
+    public void setPlaybackSliderValue(int frame) {
         playbackSlider.setValue(frame);
     }
 
-    public void updateSongTitleAndArtist(Song song){
+    public void updateSongTitleAndArtist(Song song) {
         songTitle.setText(song.getSongTitle());
         songArtist.setText(song.getSongArtist());
     }
 
-    public void updatePlaybackSlider(Song song){
+    public void updatePlaybackSlider(Song song) {
         // update max count for slider
         playbackSlider.setMaximum(song.getMp3File().getFrameCount());
 
@@ -299,7 +304,7 @@ public class MusicPlayerGUI extends JFrame {
         labelBeginning.setForeground(TEXT_COLOR);
 
         // end will vary depending on the song
-        JLabel labelEnd =  new JLabel(song.getSongLength());
+        JLabel labelEnd = new JLabel(song.getSongLength());
         labelEnd.setFont(new Font("Dialog", Font.BOLD, 18));
         labelEnd.setForeground(TEXT_COLOR);
 
@@ -310,7 +315,7 @@ public class MusicPlayerGUI extends JFrame {
         playbackSlider.setPaintLabels(true);
     }
 
-    public void enablePauseButtonDisablePlayButton(){
+    public void enablePauseButtonDisablePlayButton() {
         // retrieve reference to play button from playbackBtns panel
         JButton playButton = (JButton) playbackBtns.getComponent(1);
         JButton pauseButton = (JButton) playbackBtns.getComponent(2);
@@ -324,7 +329,7 @@ public class MusicPlayerGUI extends JFrame {
         pauseButton.setEnabled(true);
     }
 
-    public void enablePlayButtonDisablePauseButton(){
+    public void enablePlayButtonDisablePauseButton() {
         // retrieve reference to play button from playbackBtns panel
         JButton playButton = (JButton) playbackBtns.getComponent(1);
         JButton pauseButton = (JButton) playbackBtns.getComponent(2);
